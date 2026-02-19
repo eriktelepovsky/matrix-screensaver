@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <style>
-            body { margin: 0; background: hsl(220 20% 7%); }
+            body { margin: 0; background: #000; }
             #matrix-rain { position: absolute; width: 100%; height: 100%; }
         </style>
     </head>
@@ -31,13 +31,19 @@
                 if (time - lastTime < frameDelay) return;
                 lastTime = time;
 
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.025)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'hsla(160, 100%, 45%, 1)';
                 ctx.font = fontSize + 'px monospace';
 
                 for (let i = 0; i < columns; i++) {
-                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fontSize, drops[i] * fontSize);
+                    const x = i * fontSize;
+                    const prevY = (drops[i] - 1) * fontSize;
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(x, prevY - fontSize, fontSize, fontSize + 4);
+                    ctx.fillStyle = 'hsla(160, 100%, 45%, 1)';
+                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x, prevY);
+                    ctx.fillStyle = 'hsla(160, 100%, 80%, 1)';
+                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x, drops[i] * fontSize);
                     if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                     drops[i]++;
                 }
