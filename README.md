@@ -11,22 +11,23 @@ A Matrix-style falling character rain screensaver for macOS, built in native Swi
 - Fully configurable via System Settings Options panel
 - Settings persist across launches
 
-## Requirements
+## Installation (end users)
 
-- macOS 13.0 or later
-- Xcode Command Line Tools (`xcode-select --install`)
+1. Download `MatrixSaver.zip` and unzip it
+2. Double-click `MatrixSaver.saver` — macOS will offer to install it
+3. Open **System Settings → Screen Saver** and select **Matrix Rain**
 
-## Build & Install
+> **Note:** macOS may show a Gatekeeper warning because the bundle is not notarized. If that happens, right-click `MatrixSaver.saver` and choose **Open**.
+
+## Building from source
+
+Requires macOS 13.0+ and Xcode Command Line Tools (`xcode-select --install`).
 
 ```sh
-make install
-```
-
-This compiles the screensaver, copies it to `~/Library/Screen Savers/`, and restarts the screensaver process to load the new version.
-
-```sh
+make install     # build and install directly to ~/Library/Screen Savers/
+make package     # build and create MatrixSaver.zip for distribution
 make uninstall   # remove from ~/Library/Screen Savers/
-make clean       # delete the local build artifact
+make clean       # delete local build artifacts
 ```
 
 ## Configuration

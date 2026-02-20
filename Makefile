@@ -11,7 +11,7 @@ SWIFTFLAGS  = \
     -framework ScreenSaver \
     -framework AppKit
 
-.PHONY: all install uninstall clean
+.PHONY: all install uninstall clean package
 
 all: $(BUNDLE)
 
@@ -28,8 +28,13 @@ install: all
 	-pkill -x "legacyScreenSaver" 2>/dev/null; true
 	@echo "Installed and reloaded."
 
+package:
+	$(MAKE) $(BUNDLE)
+	zip -r $(BUNDLE_NAME).zip $(BUNDLE)
+	@echo "Created $(BUNDLE_NAME).zip — distribute this file to users."
+
 uninstall:
 	rm -rf ~/Library/Screen\ Savers/$(BUNDLE)
 
 clean:
-	rm -rf $(BUNDLE)
+	rm -rf $(BUNDLE) $(BUNDLE_NAME).zip
