@@ -14,13 +14,16 @@
             const ctx = canvas.getContext('2d');
             const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
             const fontSize = 14;
-            let columns, drops;
+            let columns, drops, speeds, grid;
+            const fadeSpeed = 0.02; // opacity lost per frame (lower = slower fade)
 
             function init() {
                 canvas.width = canvas.offsetWidth;
                 canvas.height = canvas.offsetHeight;
                 columns = Math.floor(canvas.width / fontSize);
                 drops = Array.from({length: columns}, () => Math.random() * -canvas.height / fontSize);
+                speeds = Array.from({length: columns}, () => 0.5 + Math.random() * 1.5);
+                grid = Array.from({length: columns}, () => ({}));
             }
 
             let lastTime = 0;
@@ -31,21 +34,40 @@
                 if (time - lastTime < frameDelay) return;
                 lastTime = time;
 
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.025)';
+                ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.font = fontSize + 'px monospace';
 
                 for (let i = 0; i < columns; i++) {
                     const x = i * fontSize;
-                    const prevY = (drops[i] - 1) * fontSize;
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(x, prevY - fontSize, fontSize, fontSize + 4);
-                    ctx.fillStyle = 'hsla(160, 100%, 45%, 1)';
-                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x, prevY);
-                    ctx.fillStyle = 'hsla(160, 100%, 80%, 1)';
-                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x, drops[i] * fontSize);
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                    drops[i]++;
+                    const head = Math.floor(drops[i]);
+
+                    const prevHead = Math.floor(drops[i] - speeds[i]);
+                    for (let r = Math.max(0, prevHead + 1); r < head; r++) {
+                        if (!grid[i][r]) grid[i][r] = { char: chars[Math.floor(Math.random() * chars.length)], opacity: 1 };
+                    }
+                    if (head >= 0) {
+                        if (!grid[i][head]) grid[i][head] = { char: chars[Math.floor(Math.random() * chars.length)], opacity: 1 };
+                        else grid[i][head].opacity = 1;
+                    }
+
+                    for (const row in grid[i]) {
+                        const cell = grid[i][row];
+                        const r = +row;
+                        if (r === head) {
+                            ctx.fillStyle = 'hsla(160, 100%, 80%, 1)';
+                        } else {
+                            cell.opacity -= fadeSpeed;
+                            if (cell.opacity <= 0) { delete grid[i][row]; continue; }
+                            ctx.fillStyle = `hsla(160, 100%, 45%, ${cell.opacity})`;
+                        }
+                        ctx.fillText(cell.char, x, r * fontSize);
+                    }
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i] += speeds[i];
                 }
             }
 
