@@ -15,6 +15,7 @@ final class MatrixScreenSaverView: ScreenSaverView {
     private static let kHeadRed     = "headR"
     private static let kHeadGreen   = "headG"
     private static let kHeadBlue    = "headB"
+    private static let kGlyphs      = "glyphs"
 
     // MARK: - Parameters
     // speed: average fall speed (speedMin = speed*0.4, speedMax = speed*1.6)
@@ -28,8 +29,10 @@ final class MatrixScreenSaverView: ScreenSaverView {
     private var trailColor = NSColor(calibratedRed: 0,   green: 0.65, blue: 0,   alpha: 1)
     private var headColor  = NSColor(calibratedRed: 0.9, green: 1.0,  blue: 0.9, alpha: 1)
 
+    private static let defaultGlyphs = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789"
+
     // MARK: - Animation state
-    private let glyphs     = Array("アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789")
+    private var glyphs = Array(defaultGlyphs)
     private var numCols    = 0
     private var numRows    = 0
     private var drops:     [Double]       = []
@@ -46,6 +49,7 @@ final class MatrixScreenSaverView: ScreenSaverView {
     private var trailSlider:   NSSlider!
     private var trailWell:     NSColorWell!
     private var headWell:      NSColorWell!
+    private var glyphsField:   NSTextField!
 
     // MARK: - Init
 
@@ -117,6 +121,9 @@ final class MatrixScreenSaverView: ScreenSaverView {
         let hg = d.object(forKey: Self.kHeadGreen) != nil ? CGFloat(d.float(forKey: Self.kHeadGreen)) : 1.0
         let hb = d.object(forKey: Self.kHeadBlue)  != nil ? CGFloat(d.float(forKey: Self.kHeadBlue))  : 0.9
         headColor = NSColor(calibratedRed: hr, green: hg, blue: hb, alpha: 1)
+
+        let str = d.string(forKey: Self.kGlyphs) ?? Self.defaultGlyphs
+        glyphs = Array(str.isEmpty ? Self.defaultGlyphs : str)
     }
 
     private func saveSettings() {
@@ -132,6 +139,7 @@ final class MatrixScreenSaverView: ScreenSaverView {
         }
         storeColor(trailColor, r: Self.kTrailRed, g: Self.kTrailGreen, b: Self.kTrailBlue)
         storeColor(headColor,  r: Self.kHeadRed,  g: Self.kHeadGreen,  b: Self.kHeadBlue)
+        d.set(String(glyphs), forKey: Self.kGlyphs)
         d.synchronize()
     }
 
@@ -233,7 +241,7 @@ final class MatrixScreenSaverView: ScreenSaverView {
 
     private func buildSheet() -> NSWindow {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 294),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 340),
             styleMask: [.titled],
             backing: .buffered,
             defer: false
@@ -245,6 +253,9 @@ final class MatrixScreenSaverView: ScreenSaverView {
         trailSlider = makeSlider(min: 1,    max: 15,  value: trailLen)
         trailWell   = makeColorWell(trailColor)
         headWell    = makeColorWell(headColor)
+        glyphsField = NSTextField(string: String(glyphs))
+        glyphsField.translatesAutoresizingMaskIntoConstraints = false
+        glyphsField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
 
         let rows: [(String, NSView)] = [
             ("Character Size:", sizeSlider),
@@ -252,6 +263,7 @@ final class MatrixScreenSaverView: ScreenSaverView {
             ("Trail Length:",   trailSlider),
             ("Trail Color:",    trailWell),
             ("Head Color:",     headWell),
+            ("Glyphs:",         glyphsField),
         ]
 
         let vStack = NSStackView()
@@ -272,12 +284,13 @@ final class MatrixScreenSaverView: ScreenSaverView {
             vStack.addArrangedSubview(row)
         }
 
+        let resetBtn  = NSButton(title: "Reset to Defaults", target: self, action: #selector(resetClicked))
         let cancelBtn = NSButton(title: "Cancel", target: self, action: #selector(cancelClicked))
         let okBtn     = NSButton(title: "OK",     target: self, action: #selector(okClicked))
         okBtn.keyEquivalent     = "\r"
         cancelBtn.keyEquivalent = "\u{1b}"
 
-        let btnRow = NSStackView(views: [cancelBtn, okBtn])
+        let btnRow = NSStackView(views: [resetBtn, cancelBtn, okBtn])
         btnRow.orientation = .horizontal
         btnRow.spacing = 8
         btnRow.translatesAutoresizingMaskIntoConstraints = false
@@ -319,6 +332,8 @@ final class MatrixScreenSaverView: ScreenSaverView {
         trailLen   = trailSlider.doubleValue
         trailColor = trailWell.color
         headColor  = headWell.color
+        let str    = glyphsField.stringValue
+        glyphs     = Array(str.isEmpty ? Self.defaultGlyphs : str)
         saveSettings()
         numCols = 0; accumRep = nil   // force re-setup with new params
         CFNotificationCenterPostNotification(
@@ -327,6 +342,15 @@ final class MatrixScreenSaverView: ScreenSaverView {
             nil, nil, true
         )
         _sheet!.sheetParent?.endSheet(_sheet!)
+    }
+
+    @objc private func resetClicked(_ sender: Any) {
+        sizeSlider.doubleValue  = 14
+        speedSlider.doubleValue = 1.25
+        trailSlider.doubleValue = 12
+        trailWell.color  = NSColor(calibratedRed: 0,   green: 0.65, blue: 0,   alpha: 1)
+        headWell.color   = NSColor(calibratedRed: 0.9, green: 1.0,  blue: 0.9, alpha: 1)
+        glyphsField.stringValue = Self.defaultGlyphs
     }
 
     @objc private func cancelClicked(_ sender: Any) {
