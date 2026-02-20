@@ -10,44 +10,51 @@
         <canvas id="matrix-rain"></canvas>
 
         <script>
+            const config = {
+                fontSize: 14,
+                fadeSpeed: 0.02,       // opacity lost per frame (lower = slower fade)
+                frameDelay: 80,        // ms between frames (lower = faster animation)
+                speedMin: 0.5,         // minimum drop speed (rows per frame)
+                speedMax: 2.0,         // maximum drop speed (rows per frame)
+                headColor: 'hsla(160, 100%, 85%, 1)',
+                trailColor: 'hsl(160, 100%, 45%)',
+                chars: 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789',
+            };
+
             const canvas = document.getElementById('matrix-rain');
             const ctx = canvas.getContext('2d');
-            const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
-            const fontSize = 14;
             let columns, drops, speeds, grid;
-            const fadeSpeed = 0.02; // opacity lost per frame (lower = slower fade)
 
             function init() {
                 canvas.width = canvas.offsetWidth;
                 canvas.height = canvas.offsetHeight;
-                columns = Math.floor(canvas.width / fontSize);
-                drops = Array.from({length: columns}, () => Math.random() * -canvas.height / fontSize);
-                speeds = Array.from({length: columns}, () => 0.5 + Math.random() * 1.5);
+                columns = Math.floor(canvas.width / config.fontSize);
+                drops = Array.from({length: columns}, () => Math.random() * -canvas.height / config.fontSize);
+                speeds = Array.from({length: columns}, () => config.speedMin + Math.random() * (config.speedMax - config.speedMin));
                 grid = Array.from({length: columns}, () => ({}));
             }
 
             let lastTime = 0;
-            const frameDelay = 80;
 
             function draw(time) {
                 requestAnimationFrame(draw);
-                if (time - lastTime < frameDelay) return;
+                if (time - lastTime < config.frameDelay) return;
                 lastTime = time;
 
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.font = fontSize + 'px monospace';
+                ctx.font = config.fontSize + 'px monospace';
 
                 for (let i = 0; i < columns; i++) {
-                    const x = i * fontSize;
+                    const x = i * config.fontSize;
                     const head = Math.floor(drops[i]);
 
                     const prevHead = Math.floor(drops[i] - speeds[i]);
                     for (let r = Math.max(0, prevHead + 1); r < head; r++) {
-                        if (!grid[i][r]) grid[i][r] = { char: chars[Math.floor(Math.random() * chars.length)], opacity: 1 };
+                        if (!grid[i][r]) grid[i][r] = { char: config.chars[Math.floor(Math.random() * config.chars.length)], opacity: 1 };
                     }
                     if (head >= 0) {
-                        if (!grid[i][head]) grid[i][head] = { char: chars[Math.floor(Math.random() * chars.length)], opacity: 1 };
+                        if (!grid[i][head]) grid[i][head] = { char: config.chars[Math.floor(Math.random() * config.chars.length)], opacity: 1 };
                         else grid[i][head].opacity = 1;
                     }
 
@@ -55,16 +62,18 @@
                         const cell = grid[i][row];
                         const r = +row;
                         if (r === head) {
-                            ctx.fillStyle = 'hsla(160, 100%, 80%, 1)';
+                            ctx.globalAlpha = 1;
+                            ctx.fillStyle = config.headColor;
                         } else {
-                            cell.opacity -= fadeSpeed;
+                            cell.opacity -= config.fadeSpeed;
                             if (cell.opacity <= 0) { delete grid[i][row]; continue; }
-                            ctx.fillStyle = `hsla(160, 100%, 45%, ${cell.opacity})`;
+                            ctx.globalAlpha = cell.opacity;
+                            ctx.fillStyle = config.trailColor;
                         }
-                        ctx.fillText(cell.char, x, r * fontSize);
+                        ctx.fillText(cell.char, x, r * config.fontSize);
                     }
 
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    if (drops[i] * config.fontSize > canvas.height && Math.random() > 0.975) {
                         drops[i] = 0;
                     }
                     drops[i] += speeds[i];
