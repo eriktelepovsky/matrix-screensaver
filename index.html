@@ -17,7 +17,7 @@
                 speedMin: 0.5,         // minimum drop speed (rows per frame)
                 speedMax: 2.0,         // maximum drop speed (rows per frame)
                 resetChance: 0.5,      // probability per frame of resetting after exiting bottom (higher = resets sooner)
-                bgColor: '#000',
+                bgColor: '#000000',
                 trailColor: 'hsl(160, 100%, 45%)',
                 headColor: 'hsla(160, 100%, 85%, 1)',
                 chars: 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789',
@@ -35,6 +35,8 @@
                 speeds = Array.from({length: columns}, () => config.speedMin + Math.random() * (config.speedMax - config.speedMin));
                 grid = Array.from({length: columns}, () => ({})); // grid[col][row] = char
                 prevHeads = new Array(columns).fill(-1);
+                ctx.fillStyle = config.bgColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
             let lastTime = 0;
