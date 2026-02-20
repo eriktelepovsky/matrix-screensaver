@@ -5,7 +5,7 @@ import AppKit
 final class MatrixScreenSaverView: ScreenSaverView {
 
     // MARK: - Defaults keys
-    private static let moduleID     = "com.eriktelepovsky.MatrixSaver"
+    private static let moduleID     = "sk.telepovsky.MatrixSaver"
     private static let kColSize     = "colSize"
     private static let kSpeed       = "speed"
     private static let kTrailLen    = "trailLen"
@@ -53,11 +53,47 @@ final class MatrixScreenSaverView: ScreenSaverView {
         super.init(frame: frame, isPreview: isPreview)
         animationTimeInterval = 1.0 / 20.0
         loadSettings()
+        observeSettingsChanges()
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         animationTimeInterval = 1.0 / 20.0
         loadSettings()
+        observeSettingsChanges()
+    }
+
+    private static let settingsNotification = "sk.telepovsky.MatrixSaver.settingsChanged" as CFString
+
+    private func observeSettingsChanges() {
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, _, _, _ in
+                guard let observer = observer else { return }
+                Unmanaged<MatrixScreenSaverView>.fromOpaque(observer)
+                    .takeUnretainedValue()
+                    .applySettingsChange()
+            },
+            Self.settingsNotification,
+            nil,
+            .deliverImmediately
+        )
+    }
+
+    private func applySettingsChange() {
+        saverDefaults()?.synchronize()
+        loadSettings()
+        numCols = 0
+        accumRep = nil
+    }
+
+    deinit {
+        CFNotificationCenterRemoveObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            CFNotificationName(Self.settingsNotification),
+            nil
+        )
     }
 
     // MARK: - Settings persistence
@@ -285,6 +321,11 @@ final class MatrixScreenSaverView: ScreenSaverView {
         headColor  = headWell.color
         saveSettings()
         numCols = 0; accumRep = nil   // force re-setup with new params
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName(Self.settingsNotification),
+            nil, nil, true
+        )
         _sheet!.sheetParent?.endSheet(_sheet!)
     }
 
