@@ -15,17 +15,17 @@ SWIFTFLAGS  = \
 
 all: $(BUNDLE)
 
-$(BUNDLE): MatrixScreenSaver.swift Info.plist index.html
+$(BUNDLE): MatrixScreenSaver.swift Info.plist
 	mkdir -p $(BUNDLE)/Contents/MacOS
 	mkdir -p $(BUNDLE)/Contents/Resources
 	swiftc MatrixScreenSaver.swift $(SWIFTFLAGS) -Xlinker -bundle -o $(BUNDLE)/Contents/MacOS/$(BUNDLE_NAME)
 	cp Info.plist $(BUNDLE)/Contents/Info.plist
-	cp index.html $(BUNDLE)/Contents/Resources/index.html
 
 install: all
 	rm -rf ~/Library/Screen\ Savers/$(BUNDLE)
 	cp -R $(BUNDLE) ~/Library/Screen\ Savers/
-	@echo "Installed. Open System Settings > Screen Saver to activate."
+	-pkill -x "legacyScreenSaver" 2>/dev/null; true
+	@echo "Installed and reloaded."
 
 uninstall:
 	rm -rf ~/Library/Screen\ Savers/$(BUNDLE)
