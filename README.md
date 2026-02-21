@@ -9,7 +9,6 @@ A Matrix-style falling character rain screensaver for macOS, built in native Swi
 - Katakana and numeric characters falling in columns
 - Distinct head (bright) and trail (fading) colors
 - Fully configurable via System Settings Options panel
-- Settings persist across launches
 
 ## Installation (end users)
 
